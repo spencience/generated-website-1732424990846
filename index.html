@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Bird Animation - Spencience Creator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.70.0/phaser.min.js"></script>
+<style>
+        body {
+            margin: 0;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        #game-container {
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="game-container"></div>
+<script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            backgroundColor: '#2a2a4a',
+            parent: 'game-container',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 300 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        let bird;
+        let isRotating = true;
+        let score = 0;
+        let scoreText;
+        let gameState = 'playing';
+
+        function preload() {
+            // Create pixel bird using graphics
+            const graphics = this.add.graphics();
+            graphics.lineStyle(1, 0xffffff);
+            graphics.fillStyle(0x4a90e2);
+            graphics.beginPath();
+            graphics.moveTo(0, 0);
+            graphics.lineTo(20, 10);
+            graphics.lineTo(0, 20);
+            graphics.lineTo(5, 10);
+            graphics.closePath();
+            graphics.fill();
+            graphics.generateTexture('bird', 30, 30);
+            graphics.destroy();
+        }
+
+        function create() {
+            bird = this.add.sprite(400, 300, 'bird');
+            bird.setScale(2);
+
+            // Add score display
+            scoreText = this.add.text(16, 16, 'Score: 0', {
+                fontSize: '32px',
+                fill: '#fff'
+            });
+
+            // Add controls
+            this.input.keyboard.on('keydown-SPACE', function() {
+                if (isRotating) {
+                    isRotating = false;
+                    score += 10;
+                    scoreText.setText('Score: ' + score);
+                } else {
+                    isRotating = true;
+                }
+            });
+
+            // Add wings animation
+            this.tweens.add({
+                targets: bird,
+                scaleY: 1.2,
+                duration: 200,
+                yoyo: true,
+                repeat: -1
+            });
+
+            // Add hover animation
+            this.tweens.add({
+                targets: bird,
+                y: '+=20',
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+
+        function update() {
+            if (isRotating) {
+                bird.angle += 1;
+            }
+
+            // Wrap bird around screen
+            if (bird.x > config.width) bird.x = 0;
+            if (bird.x < 0) bird.x = config.width;
+            if (bird.y > config.height) bird.y = 0;
+            if (bird.y < 0) bird.y = config.height;
+
+            // Handle input
+            const cursors = this.input.keyboard.createCursorKeys();
+            if (cursors.left.isDown) {
+                bird.x -= 4;
+                bird.flipX = true;
+            }
+            if (cursors.right.isDown) {
+                bird.x += 4;
+                bird.flipX = false;
+            }
+            if (cursors.up.isDown) {
+                bird.y -= 4;
+            }
+            if (cursors.down.isDown) {
+                bird.y += 4;
+            }
+        }
+    </script>
+</body>
+</html>
